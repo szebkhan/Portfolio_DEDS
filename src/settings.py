@@ -7,19 +7,19 @@ class Settings():
     processeddir = Path("processed")
     logdir = basedir / "log"
 
-sales_activity_columns = [
-    "sales",
-    "country",
-    "retailer",
-    "returned",
-    "branch",
-    "order",
-    "staff",
-    "order_header",
-    "details",
-    "product_type",
-    "reason",
-]
+    sales_activity_columns = [
+        "sales",
+        "country",
+        "retailer",
+        "returned",
+        "branch",
+        "order",
+        "staff",
+        "order_header",
+        "details",
+        "product_type",
+        "reason",
+    ]
 
 settings = Settings()
 logger.add("logfile.log")
