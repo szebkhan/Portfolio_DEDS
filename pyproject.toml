@@ -1,0 +1,15 @@
+[project]
+name = "project_DEDS"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "szebkhan", email = "23077956@student.hhs.nl"},
+]
+dependencies = ["pandas>=2.2.3", "pyodbc>=5.2.0"]
+requires-python = "==3.13.*"
+readme = "README.md"
+license = {text = "MIT"}
+
+
+[tool.pdm]
+distribution = false
