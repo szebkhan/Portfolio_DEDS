@@ -47,6 +47,9 @@ cell_height = screen_height // rows
 x = 1
 y = 1
 
+# Restart variabelen om environment te restarten
+restart_button_time = None
+
 # Maze en gridlines tekenen in game window
 def draw_maze():
     for row in range(rows):
@@ -71,6 +74,17 @@ while running:
             running = False
 
     keys = pygame.key.get_pressed()
+
+    # Restart knop logica (na 5 seconden van restart knop vast houden, restart de environment)
+    if keys[pygame.K_r]:
+        if restart_button_time is None:
+            restart_button_time = pygame.time.get_ticks()
+        else:
+            if pygame.time.get_ticks() - restart_button_time >= 5000:
+                x, y = 1, 1
+                restart_button_time = None
+    else:
+        restart_button_time = None
 
     # Game controls: W = Up, A = Left, S = Down, D = Right
     if keys[pygame.K_a] and x > 0 and maze[y][x - 1] == 0:
