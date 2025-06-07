@@ -1,119 +1,124 @@
 import pygame
-import random
-import sys
+from agent import Agent
+from grid_world import GridWorld
+from q_learning_agent import QLearningAgent
 
-#Initializeer game
-pygame.init()
-screen_width = 600
-screen_height = 600
-screen = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption("Too Dee Game")
+class Game:
+    def __init__(self):
+        self.grid_world = GridWorld()
+        self.agent = Agent(1, 1, self.grid_world)  # Start op positie (1,1)
+        self.q_agent = QLearningAgent(self.grid_world)
+        self.use_q_agent = False
+        self.running = True
 
-# Maze layout
-maze = [
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1],
-    [1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1],
-    [1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1],
-    [1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1],
-    [1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-]
+    def reset_environment(self): # Complete Environment Reset
+        self.agent.reset_position()
+        self.q_agent.q_table = {}
+        self.q_agent.epsilon = 0.2
+        self.use_q_agent = False             
 
-# Grid rijen en kolommen 
-rows = 15
-cols = 15
-
-# Gebruikte kleuren
-white = (255, 255, 255)
-red = (255, 0, 0)
-blue = (0, 0, 255)
-green = (0, 255, 0)
-black = (0, 0, 0)
-
-# Grid blok groottes
-cell_width = screen_width // cols
-cell_height = screen_height // rows
-
-#Coördinaten voor user-controlled blok
-x = 1
-y = 1
-
-# Restart variabelen om environment te restarten
-restart_button_time = None
-
-# Maze en gridlines tekenen in game window
-def draw_maze():
-    for row in range(rows):
-        for col in range(cols):
-            color = white if maze[row][col] == 0 else red
-            pygame.draw.rect(screen, color, (col * cell_width, row * cell_height, cell_width, cell_height))
-    for x in range(0, screen_width, cell_width):
-        pygame.draw.line(screen, black, (x, 0), (x, screen_height))
-    for y in range(0, screen_height, cell_height):
-        pygame.draw.line(screen, black, (0, y), (screen_width, y))
-
-# Game beginnen wanneer code wordt ge-execute
-running = True
-while running:
-    pygame.time.delay(100)
-
-    screen.fill(white)
-    draw_maze()
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-
-    keys = pygame.key.get_pressed()
-
-    # Restart knop logica (na 5 seconden van restart knop vast houden, restart de environment)
-    if keys[pygame.K_r]:
-        if restart_button_time is None:
-            restart_button_time = pygame.time.get_ticks()
-        else:
-            if pygame.time.get_ticks() - restart_button_time >= 5000:
-                x, y = 1, 1
-                restart_button_time = None
-    else:
-        restart_button_time = None
-
-    # Game controls: W = Up, A = Left, S = Down, D = Right
-    if keys[pygame.K_a] and x > 0 and maze[y][x - 1] == 0:
-        x -= 1
+        print("Environment is volledig gereset")
     
-    if keys[pygame.K_d] and x < cols - 1 and maze[y][x + 1] == 0:
-        x += 1
+    def handle_input(self): # Behandel keyboard input
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+        
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    self.reset_environment()
+                elif event.key == pygame.K_t:
+                    print("Agent trainen met Q-Learning")
+                    self.train_agent(episodes=1000)
+                    print("Training succesvol!")
+                    self.use_q_agent = True
+                    self.agent.reset_position()
+                elif event.key == pygame.K_1:
+                    self.q_agent.adjust_learning_rate(-0.05)
+                elif event.key == pygame.K_2:
+                    self.q_agent.adjust_learning_rate(0.05)
+                elif event.key == pygame.K_3:
+                    self.q_agent.adjust_discount_factor(-0.05)
+                elif event.key == pygame.K_4:
+                    self.q_agent.adjust_discount_factor(0.05)
+                elif event.key == pygame.K_5:
+                    self.q_agent.adjust_epsilon(-0.05)
+                elif event.key == pygame.K_6:
+                    self.q_agent.adjust_epsilon(0.05)
 
-    if keys[pygame.K_w] and y > 0 and maze[y - 1][x] == 0:
-        y -= 1
+        keys = pygame.key.get_pressed()
+        
+        # Beweging controls: W = Up, A = Left, S = Down, D = Right
+        if keys[pygame.K_a]:
+            self.agent.move_agent("left")
+        if keys[pygame.K_d]:
+            self.agent.move_agent("right")
+        if keys[pygame.K_w]:
+            self.agent.move_agent("up")
+        if keys[pygame.K_s]:
+            self.agent.move_agent("down")
+    
+    def check_win_condition(self): # Check of het spel gewonnen is
+        if self.agent.has_reached_goal():
+            print("Gewonnen!")
+            self.running = False
 
-    if keys[pygame.K_s] and y < rows - 1 and maze[y + 1][x] == 0:
-        y += 1
+    def train_agent(self, episodes=1000):
+        for episode in range(episodes):
+            self.agent.reset_position()
+            done = False
 
-    # Maak user-controlled gridblok
-    pygame.draw.rect(screen, blue, (x * cell_width, y * cell_height, cell_width, cell_height))
+            while not done:
+                state = (self.agent.x, self.agent.y)
+                action = self.q_agent.choose_action(state)
+                self.agent.move_agent(action)
 
-    goal_row = 13
-    goal_col = 13
+                reward = self.grid_world.get_reward((self.agent.x, self.agent.y))
 
-    # Maak goal voor maze
-    pygame.draw.rect(screen, green, (goal_col * cell_width, goal_row * cell_height, cell_width, cell_height))
+                next_state = (self.agent.x, self.agent.y)
+                self.q_agent.update_q_value(state, action, reward, next_state)
 
-    if x == goal_row and y == goal_col:
-        print ("gewonnen")
-        running = False
+                done = self.agent.has_reached_goal()
 
-    # Update de game window
-    pygame.display.update()
+            print(f"Episode {episode + 1}/{episodes} voltooid")
 
-# Quit de game als while loop stopt
-pygame.quit()
+
+    
+    def run(self): # Main game loop
+        while self.running:
+            pygame.time.delay(100)
+            
+            # Handle input
+            if self.use_q_agent:
+                state = (self.agent.x, self.agent.y)
+                action = self.q_agent.choose_action(state)
+                self.agent.move_agent(action)
+            else:
+                self.handle_input()
+
+            
+
+            # Clear screen
+            self.grid_world.screen.fill(self.grid_world.white)
+            
+            # Draw everything
+            self.grid_world.draw_maze()
+            self.grid_world.draw_goal()
+            self.agent.draw_agent()
+
+            if self.use_q_agent:
+                self.grid_world.draw_q_values_simple(self.q_agent.q_table)
+            
+            # Check win condition
+            self.check_win_condition()
+            
+            # Update display
+            pygame.display.update()
+        
+        # Quit
+        pygame.quit()
+
+# Start het spel
+if __name__ == "__main__":
+    game = Game()
+    game.run()
