@@ -1,19 +1,15 @@
 import random
 
-class QLearningAgent:
-    def __init__(self, grid_world, alpha=0.1, gamma=0.9, epsilon=0.2):
+class QLearningAgent():
+    def __init__(self, grid_world, agent, alpha=0.1, gamma=0.9, epsilon=0.2):
         self.grid_world = grid_world
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon = epsilon
         self.q_table = {}
+        self.agent = agent
 
         self.actions = ["up", "down", "left", "right"]
-
-        self.episode_rewards = []
-        self.episode_steps = []
-        self.current_episode_reward = 0
-        self.current_episode_steps = 0
 
     def get_q(self, state, action):
         if state not in self.q_table:
@@ -54,16 +50,34 @@ class QLearningAgent:
         print(f"Exploration rate veranderd naar: {self.epsilon:.2f}")
 
     def train(self, episodes=500):
-        for ep in range(episodes):
-            x, y = self.grid_world.agent_start()
-            state = (x, y)
+        for episode in range(episodes):
+            self.agent.reset_position()
+            done = False
 
-            steps = 0
-            while not self.grid_world.is_goal(state) and steps < 1000:
+            while not done:
+                state = (self.agent.x, self.agent.y)
                 action = self.choose_action(state)
-                next_state = self.grid_world.get_next_position(state, action)
-                reward = self.grid_world.get_reward(next_state)
+                self.agent.move_agent(action)
 
+                reward = self.grid_world.get_reward((self.agent.x, self.agent.y))
+
+                next_state = (self.agent.x, self.agent.y)
                 self.update_q_value(state, action, reward, next_state)
-                state = next_state
-                steps += 1
+
+                done = self.agent.has_reached_goal()
+
+            print(f"Episode {episode + 1}/{episodes} voltooid")
+
+    def learn_step(self):
+
+        state = (self.agent.x, self.agent.y)
+        action = self.choose_action(state)
+        self.agent.move_agent(action)
+
+        reward = self.grid_world.get_reward((self.agent.x, self.agent.y))
+        next_state = (self.agent.x, self.agent.y)
+
+        self.update_q_value(state, action, reward, next_state)
+
+        if self.agent.has_reached_goal():
+            self.epsilon = max(0.01, self.epsilon * 0.99)
