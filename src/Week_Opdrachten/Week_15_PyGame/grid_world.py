@@ -53,13 +53,17 @@ class GridWorld:
         for _ in range(self.rows):
             row = []
             for _ in range(self.cols):
-                tile = random.choices([0, 1, 2], weights=[0.70, 0.15, 0.15])[0]
+                tile = random.choices([0, 1, 2], weights=[0.65, 0.20, 0.15])[0]
                 row.append(tile)
             maze.append(row)
 
         # Zorg ervoor dat de start en goal columns zijn opgeslagen als path (0 in array)
         maze[0][0] = 0
         maze[self.rows - 1][self.cols - 1] = 0
+        maze[1][0] = 0
+        maze[0][1] = 0
+        maze[self.rows - 2][self.cols - 1] = 0
+        maze[self.rows - 1][self.cols - 2] = 0
         return maze
 
     # Maze tekenen op scherm
