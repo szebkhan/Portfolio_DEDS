@@ -138,6 +138,6 @@ class GridWorld:
         elif self.maze[position[1]][position[0]] == 0:
             return -1
         elif self.maze[position[1]][position[0]] == 2:
-            return -10
+            return -50
         else:
             return -100
